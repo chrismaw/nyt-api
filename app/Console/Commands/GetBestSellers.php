@@ -27,7 +27,6 @@ class GetBestSellers extends Command
      */
     public function handle()
     {
-        $path = '/app/private.history.json';
         $results = [];
         $count = 0;
 
@@ -48,16 +47,24 @@ class GetBestSellers extends Command
         $count += count($json['results']);
         $bar->advance();
 
-        while ($count <= 80) { // only want 100 total
-            $response = $client->get('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key') . '&offset=' . $count);
-            $results = array_merge($results, $json['results']); // next 20
+        for ($i = 20; $i <= 80; $i+=20) {
+            $this->info($i);
+            $response = $client->get('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key') . '&offset=' . $i);
+            $json = json_decode($response->getBody()->getContents(), true);
+            $results = array_merge($json['results'], $results);
             $count += count($json['results']);
             $bar->advance();
         }
+//        while ($count <= 80) { // only want 100 total
+//            $response = $client->get('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key') . '&offset=' . $count);
+//            $results = array_merge($results, $json['results']); // next 20
+//            $count += 20;
+//            $bar->advance();
+//        }
 
-        Storage::put('history.json',json_encode($results),'private'); // overwrites if file already exists
+        Storage::disk('app')->put('history.json',json_encode($results)); // overwrites if file already exists
         $this->newLine(1);
-        $this->info($count . 'books stored' . PHP_EOL);
+        $this->info($count . ' books stored' . PHP_EOL);
         return true;
 
     }
