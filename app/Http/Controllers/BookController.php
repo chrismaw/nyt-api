@@ -24,30 +24,27 @@ class BookController extends Controller
         }
         // Retrieve and decode JSON data
         $books = collect(Storage::disk('app')->json($path));
-        $filteredBooks = $books->filter(function ($book) use ($author, $title, $isbns) {
-            $matchesAuthor = !$author || str_contains(strtolower($book['author']), strtolower($author));
-            $matchesTitle = !$title || str_contains(strtolower($book['title']), strtolower($title));
-            $isbnMatches = false;
-            dd($book['isbns'][0]);
-            if ($isbns && count($isbns)) {
-                foreach ($isbns as $isbn) {
-                    $isbnMatches = in_array($isbn, array_values($book['isbns'][0]));
-                }
-            }
-            $matchesISBN = !$isbns || $isbnMatches;
-            return $matchesAuthor && $matchesTitle && $matchesISBN;
-        });
-
-        $booksData = $filteredBooks->splice($offset, 20);
-        dd($booksData);
-        // Return the filtered books
-        return $booksData->values();
-        $books = $jsonContent->splice($offset, 20);
-        dd($booksData);
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json(['error' => 'Error decoding JSON: ' . json_last_error_msg()], 500);
         }
-
+        $filteredBooks = $books->filter(function ($book) use ($author, $title, $isbns) {
+            $matchesAuthor = !$author || str_contains(strtolower($book['author']), strtolower($author));
+            $matchesTitle = !$title || str_contains(strtolower($book['title']), strtolower($title));
+            $matchesISBN = false;
+            if ($isbns && count($isbns)) {
+                foreach ($book['isbns'] as $isbnSet) {
+                    foreach ($isbnSet as $bookIsbn) {
+                        if (in_array($bookIsbn, array_values($isbns))) {
+                            $matchesISBN = true;
+                        }
+                    }
+                }
+            }
+            return $matchesAuthor && $matchesTitle && $matchesISBN;
+        });
+        $booksData = $filteredBooks->splice($offset, 20);
+        // Return the filtered books
+        return $booksData->values();
 
     }
 }
