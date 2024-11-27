@@ -55,14 +55,8 @@ class GetBestSellers extends Command
             $count += count($json['results']);
             $bar->advance();
         }
-//        while ($count <= 80) { // only want 100 total
-//            $response = $client->get('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key') . '&offset=' . $count);
-//            $results = array_merge($results, $json['results']); // next 20
-//            $count += 20;
-//            $bar->advance();
-//        }
 
-        Storage::disk('app')->put('history.json',json_encode($results)); // overwrites if file already exists
+        Storage::disk('app')->put('test-history.json',json_encode($results)); // overwrites if file already exists
         $this->newLine(1);
         $this->info($count . ' books stored' . PHP_EOL);
         return true;
