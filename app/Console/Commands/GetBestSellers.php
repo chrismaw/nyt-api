@@ -31,7 +31,7 @@ class GetBestSellers extends Command
         $count = 0;
 
         $client = new \GuzzleHttp\Client();
-        $response = $client->get('https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key'));
+        $response = $client->get(config('nyt-api.api_path') . 'lists/best-sellers/history.json?api-key=' . config('nyt-api.api_key'));
 
         $json = json_decode($response->getBody()->getContents(), true);
         $num_results = intval($json['num_results']); // 36488
